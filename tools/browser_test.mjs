@@ -29,7 +29,7 @@ console.log('defaults (8:00 start, 24 units, 30 min break, 90%)');
 ok(await page.textContent('#end-time') === '3:10 PM', 'end time is 3:10 PM');
 ok((await page.textContent('#worked')).trim() === '6 hr 40 min', 'working time 6 hr 40 min');
 ok((await page.textContent('#nonbill')).trim() === '40 min', 'non-billable 40 min');
-ok((await page.textContent('#units-hint')).includes('24 units = 6 hr'), 'units hint shows conversion');
+ok(await page.textContent('label[for="mode-units"]') === 'Units', 'units toggle says just "Units"');
 
 console.log('interactions');
 // productivity chip 75 -> 8:00 + 6h/0.75 (8h) + 0:30 = 4:30 PM

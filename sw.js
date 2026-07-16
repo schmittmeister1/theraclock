@@ -3,7 +3,7 @@
 
 'use strict';
 
-var CACHE = 'theraclock-v1.0.0';
+var CACHE = 'theraclock-v1.0.1';
 var ASSETS = [
   './',
   './index.html',

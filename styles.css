@@ -219,12 +219,6 @@ button:focus-visible {
 
 .step-btn:active { background: var(--accent-wash); }
 
-.hint {
-  margin: 8px 2px 0;
-  font-size: 13px;
-  color: var(--ink-2);
-}
-
 .hm-row {
   display: flex;
   align-items: center;

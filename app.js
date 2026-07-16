@@ -86,7 +86,6 @@ if (typeof document !== 'undefined') {
       units: $('units'),
       unitsMinus: $('units-minus'),
       unitsPlus: $('units-plus'),
-      unitsHint: $('units-hint'),
       billH: $('bill-h'),
       billM: $('bill-m'),
       brk: $('break'),
@@ -177,12 +176,6 @@ if (typeof document !== 'undefined') {
         breakMin: brk,
         productivityPct: prod
       });
-
-      // units hint
-      var u = Number(els.units.value);
-      els.unitsHint.textContent = isFinite(u) && u > 0
-        ? u + (u === 1 ? ' unit = ' : ' units = ') + fmtDuration(unitsToMinutes(u))
-        : ' ';
 
       syncChips(els.breakChips, brk);
       syncChips(els.prodChips, prod);
