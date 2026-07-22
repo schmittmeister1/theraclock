@@ -59,6 +59,19 @@ jobs:
             ls -la ./*.aab ./*.apk
           } 2>&1 | tee build.log
 
+      - name: Push log to ci-logs branch (readable via git)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp android/build.log /tmp/build.log 2>/dev/null || echo "build.log missing" > /tmp/build.log
+          mkdir /tmp/cilogs && cd /tmp/cilogs
+          git init -q -b ci-logs
+          cp /tmp/build.log build.log
+          git -c user.name=theraclock-ci -c user.email=ci@users.noreply.github.com add build.log
+          git -c user.name=theraclock-ci -c user.email=ci@users.noreply.github.com commit -qm "build log for run ${{ github.run_number }}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-logs
+
       - name: Publish outputs and log as a release
         if: always()
         env:
