@@ -18,3 +18,5 @@ To ship an app update after changing the web app: bump `appVersionCode` (+1)
 and `appVersionName` in `twa-manifest.json`, let the build run, and upload the
 new `.aab` to Play Console. Pure web changes don't need a new build at all —
 the app shows the live site.
+
+Build logs: every run (pass or fail) publishes its build.log on the Releases page.

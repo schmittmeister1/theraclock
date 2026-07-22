@@ -22,45 +22,63 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
-
-      - name: Restore signing keystore from secret
+      - name: Build signed .aab with Bubblewrap
         working-directory: android
-        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > upload.keystore
-
-      - name: Configure Bubblewrap paths
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\": \"$JAVA_HOME\", \"androidSdkPath\": \"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          set -o pipefail
+          {
+            echo "== versions =="
+            node --version
+            java -version 2>&1
+            echo "JAVA_HOME=$JAVA_HOME"
+            echo "ANDROID_HOME=$ANDROID_HOME"
 
-      - name: Generate Android project from twa-manifest.json
-        working-directory: android
-        run: bubblewrap update --skipVersionUpgrade
+            echo "== install bubblewrap =="
+            npm install -g @bubblewrap/cli
 
-      - name: Build signed .aab
-        working-directory: android
+            echo "== restore keystore (contents redacted) =="
+            echo "$KS_B64" | base64 -d > upload.keystore
+            ls -la upload.keystore
+
+            echo "== bubblewrap config =="
+            mkdir -p ~/.bubblewrap
+            printf '{"jdkPath": "%s", "androidSdkPath": "%s"}\n' "$JAVA_HOME" "$ANDROID_HOME" > ~/.bubblewrap/config.json
+            cat ~/.bubblewrap/config.json
+            (yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1) || echo "license step skipped"
+
+            echo "== bubblewrap update =="
+            bubblewrap update --skipVersionUpgrade
+
+            echo "== bubblewrap build =="
+            printf '%s\n%s\n' "$KS_PASS" "$KS_PASS" | bubblewrap build --skipPwaValidation
+
+            echo "== outputs =="
+            ls -la ./*.aab ./*.apk
+          } 2>&1 | tee build.log
+
+      - name: Publish outputs and log as a release
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          printf '%s\n%s\n' "${{ secrets.KEYSTORE_PASSWORD }}" "${{ secrets.KEYSTORE_PASSWORD }}" | \
-            bubblewrap build --skipPwaValidation
-          ls -la *.aab *.apk || true
+          TAG="build-${{ github.run_number }}"
+          STATUS="${{ job.status }}"
+          gh release create "$TAG" \
+            --title "Android build ${{ github.run_number }} ($STATUS)" \
+            --notes "Automated Bubblewrap build. Package: io.github.schmittmeister1.theraclock — see build.log for details." \
+            android/build.log || true
+          gh release upload "$TAG" android/app-release-bundle.aab || true
+          gh release upload "$TAG" android/app-release-signed.apk || true
 
-      - name: Upload build artifact
+      - name: Upload artifact (backup)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: theraclock-android
           path: |
+            android/build.log
             android/app-release-bundle.aab
             android/app-release-signed.apk
-
-      - name: Attach .aab to a GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="android-build-${{ github.run_number }}"
-          gh release create "$TAG" \
-            --title "TheraClock Android build ${{ github.run_number }}" \
-            --notes "Signed Android App Bundle for Play Console upload. Package: io.github.schmittmeister1.theraclock" \
-            android/app-release-bundle.aab
-          gh release upload "$TAG" android/app-release-signed.apk || true
