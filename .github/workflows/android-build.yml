@@ -1,0 +1,66 @@
+name: Build Android app (.aab)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['android/**']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Restore signing keystore from secret
+        working-directory: android
+        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > upload.keystore
+
+      - name: Configure Bubblewrap paths
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo "{\"jdkPath\": \"$JAVA_HOME\", \"androidSdkPath\": \"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Generate Android project from twa-manifest.json
+        working-directory: android
+        run: bubblewrap update --skipVersionUpgrade
+
+      - name: Build signed .aab
+        working-directory: android
+        run: |
+          printf '%s\n%s\n' "${{ secrets.KEYSTORE_PASSWORD }}" "${{ secrets.KEYSTORE_PASSWORD }}" | \
+            bubblewrap build --skipPwaValidation
+          ls -la *.aab *.apk || true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: theraclock-android
+          path: |
+            android/app-release-bundle.aab
+            android/app-release-signed.apk
+
+      - name: Attach .aab to a GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="android-build-${{ github.run_number }}"
+          gh release create "$TAG" \
+            --title "TheraClock Android build ${{ github.run_number }}" \
+            --notes "Signed Android App Bundle for Play Console upload. Package: io.github.schmittmeister1.theraclock" \
+            android/app-release-bundle.aab
+          gh release upload "$TAG" android/app-release-signed.apk || true
