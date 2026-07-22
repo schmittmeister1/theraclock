@@ -20,4 +20,4 @@ new `.aab` to Play Console. Pure web changes don't need a new build at all —
 the app shows the live site.
 
 Build logs: every run (pass or fail) publishes its build.log on the Releases page.
-(log channel v2)
+Log channel: build.log is mirrored to the ci-logs branch each run.
