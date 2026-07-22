@@ -40,8 +40,11 @@ jobs:
             npm install -g @bubblewrap/cli
 
             echo "== restore keystore (contents redacted) =="
-            echo "$KS_B64" | base64 -d > upload.keystore
+            echo "$KS_B64" | tr -d ' \n\r' | base64 -d > upload.keystore
             ls -la upload.keystore
+            [ -s upload.keystore ] || { echo "FATAL: the ANDROID_KEYSTORE_B64 secret is empty or missing — re-add it in repo Settings -> Secrets and variables -> Actions"; exit 1; }
+            [ -n "$KS_PASS" ] || { echo "FATAL: the KEYSTORE_PASSWORD secret is empty or missing"; exit 1; }
+            keytool -list -keystore upload.keystore -storepass "$KS_PASS" -alias upload > /dev/null || { echo "FATAL: keystore/password don't match — check both secrets"; exit 1; }
 
             echo "== bubblewrap config =="
             mkdir -p ~/.bubblewrap
@@ -49,14 +52,21 @@ jobs:
             cat ~/.bubblewrap/config.json
             (yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1) || echo "license step skipped"
 
-            echo "== bubblewrap update =="
+            echo "== bubblewrap update (generates the Android project) =="
             bubblewrap update --skipVersionUpgrade
 
-            echo "== bubblewrap build =="
-            printf '%s\n%s\n' "$KS_PASS" "$KS_PASS" | bubblewrap build --skipPwaValidation
+            echo "== gradle build (unsigned bundle) =="
+            chmod +x ./gradlew
+            ./gradlew --no-daemon bundleRelease
+
+            echo "== sign the bundle =="
+            cp app/build/outputs/bundle/release/app-release.aab ./unsigned.aab
+            jarsigner -keystore upload.keystore -storepass "$KS_PASS" -keypass "$KS_PASS" \
+              -signedjar app-release-bundle.aab unsigned.aab upload
+            jarsigner -verify app-release-bundle.aab
 
             echo "== outputs =="
-            ls -la ./*.aab ./*.apk
+            ls -la ./*.aab
           } 2>&1 | tee build.log
 
       - name: Push log to ci-logs branch (readable via git)
