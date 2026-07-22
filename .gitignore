@@ -3,3 +3,14 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Android signing — never commit keys
+*.keystore
+*.jks
+android/build/
+android/app/
+android/gradle*
+android/*.aab
+android/*.apk
+android/*.idsig
+android/manifest-checksum.txt

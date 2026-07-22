@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.schmittmeister1.theraclock",
+      "sha256_cert_fingerprints": [
+        "A2:96:75:16:79:36:C3:76:47:8E:07:20:37:6C:74:65:6F:6C:C3:A3:C5:A6:B4:03:A0:71:16:22:01:A7:63:B9"
+      ]
+    }
+  }
+]

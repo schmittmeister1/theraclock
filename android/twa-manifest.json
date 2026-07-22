@@ -1,0 +1,42 @@
+{
+  "packageId": "io.github.schmittmeister1.theraclock",
+  "host": "schmittmeister1.github.io",
+  "name": "TheraClock: PT/OT Productivity",
+  "launcherName": "TheraClock",
+  "display": "standalone",
+  "themeColor": "#2a78d6",
+  "themeColorDark": "#0d0d0d",
+  "navigationColor": "#2a78d6",
+  "navigationColorDark": "#1a1a19",
+  "navigationDividerColor": "#2a78d6",
+  "navigationDividerColorDark": "#1a1a19",
+  "backgroundColor": "#f9f9f7",
+  "enableNotifications": false,
+  "startUrl": "/theraclock/",
+  "iconUrl": "https://schmittmeister1.github.io/theraclock/icons/icon-512.png",
+  "maskableIconUrl": "https://schmittmeister1.github.io/theraclock/icons/maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "appVersionName": "1.0.1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "signingKey": {
+    "path": "./upload.keystore",
+    "alias": "upload"
+  },
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://schmittmeister1.github.io/theraclock/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://schmittmeister1.github.io/theraclock/",
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}
